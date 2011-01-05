@@ -2,6 +2,7 @@
 
 import sys
 import subprocess
+from urlparse import urlparse
 
 def run_ab(url, extra_params):
     cmd = 'ab %s %s' % (extra_params, url)
@@ -31,12 +32,23 @@ def color(text, color):
     except KeyError, e:
         return text
 
+def usage():
+    print 'USAGE: abvs [-n number_of_requests] [-c number_concurrent_requests] url1 url2.'
+    print'You can also use any ab (apache bench) option.'
+    sys.exit(1)
+
 try:
-    url1, url2 = sys.argv[1], sys.argv[2]
-    extra_ab_params = ' '.join(sys.argv[3:])
+    url1, url2 = sys.argv[-2], sys.argv[-1]
+    p1 = urlparse(url1)
+    p2 = urlparse(url2)
+
+    if p1.scheme == '' or p2.scheme == '' or p1.path[0] != '/' or p2.path[0] != '/':
+        usage()
+
+    extra_ab_params = ' '.join(sys.argv[1:-2])
     res = versus(url1, url2, extra_ab_params)[0]
-    url1 = color(url1, 'green' if res[2] < 0 else 'red')
-    url2 = color(url2, 'green' if res[2] > 0 else 'red')
-    print "%s (%d req/s) is %.2f%% %s than %s (%d req/s)" % (url1, res[0], abs(res[2]), 'faster' if res[2] < 0 else 'slower', url2, res[1])
+    url1 = color("%s (%d reqs/s)" % (url1, res[0]) , 'green' if res[2] < 0 else 'red')
+    url2 = color("%s (%d reqs/s)" % (url2, res[1]), 'green' if res[2] > 0 else 'red')
+    print "%s is %.2f%% %s than %s" % (url1, abs(res[2]), 'faster' if res[2] < 0 else 'slower', url2)
 except IndexError, e:
-    print 'USAGE: abvs [-n number_of_requests] [-c number_concurrent_requests] url1 url2. You can also use any ab (apache bench) option.'
+    usage()
