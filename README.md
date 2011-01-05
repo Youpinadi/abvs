@@ -12,6 +12,16 @@ Options
 * url1 the first url to test
 * url2 the second url to test
 
+Sample usage
+-------
+
+    ./abvs http://www.google.com/ http://www.google.fr/
+
+Output:
+    ab  http://www.google.com/
+    ab  http://www.google.fr/
+    http://www.google.com/ (40 req/s) is 9.82% faster than http://www.google.fr/ (36 req/s)
+
 Contributing
 ------------
 
