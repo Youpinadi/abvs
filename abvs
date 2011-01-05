@@ -19,11 +19,12 @@ def run_ab(url, extra_params):
 def versus(url1, url2,  extra_params):
     res1 = run_ab(url1, extra_params)
     res2 = run_ab(url2, extra_params)
-    return [(res1[i], res2[i], (res2[i] - res1[i]) * 100 / res1[i]) for i in range(len(res1))]
+    return [(res1[i], res2[i], (res1[i] / res2[i])) for i in range(len(res1))]
 
 COLOR = {
     'green': '\033[1;32m%s\033[0m',
     'red': '\033[1;31m%s\033[0m',
+    'magenta': '\033[1;35m%s\033[0m',
 }
 
 def color(text, color):
@@ -35,6 +36,7 @@ def color(text, color):
 def usage():
     print 'USAGE: abvs [-n number_of_requests] [-c number_concurrent_requests] url1 url2.'
     print'You can also use any ab (apache bench) option.'
+    print'Example : abvs -n 100 -c 10 http://www.google.com/ http://www.google.fr/'
     sys.exit(1)
 
 try:
@@ -47,8 +49,10 @@ try:
 
     extra_ab_params = ' '.join(sys.argv[1:-2])
     res = versus(url1, url2, extra_ab_params)[0]
-    url1 = color("%s (%d reqs/s)" % (url1, res[0]) , 'green' if res[2] < 0 else 'red')
-    url2 = color("%s (%d reqs/s)" % (url2, res[1]), 'green' if res[2] > 0 else 'red')
-    print "%s is %.2f%% %s than %s" % (url1, abs(res[2]), 'faster' if res[2] < 0 else 'slower', url2)
+    url1 = color("%s (%d reqs/s)" % (url1, res[0]) , 'green' if res[2] > 1 else 'red')
+    url2 = color("%s (%d reqs/s)" % (url2, res[1]), 'green' if res[2] < 1 else 'red')
+    cmp = color("%.2fx times %s" % (abs(res[2]), 'faster' if res[2] > 1 else 'slower'), 'magenta')
+    
+    print "%s is %s than %s" % (url1, cmp, url2)
 except IndexError, e:
     usage()
