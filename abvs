@@ -39,4 +39,4 @@ try:
     url2 = color(url2, 'green' if res[2] > 0 else 'red')
     print "%s (%d req/s) is %.2f%% %s than %s (%d req/s)" % (url1, res[0], abs(res[2]), 'faster' if res[2] < 0 else 'slower', url2, res[1])
 except IndexError, e:
-    print 'missing arguments'
+    print 'USAGE: abvs [-n number_of_requests] [-c number_concurrent_requests] url1 url2. You can also use any ab (apache bench) option.'
