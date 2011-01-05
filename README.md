@@ -7,10 +7,10 @@ It can be used to compare 2 websites, or to compare same pages of a site to see 
 Options
 -------
 
--n Number of requests
--c Number of concurrent requests
-url1 the first url to test
-url2 the second url to test
+* -n Number of requests
+* -c Number of concurrent requests
+* url1 the first url to test
+* url2 the second url to test
 
 Contributing
 ------------
