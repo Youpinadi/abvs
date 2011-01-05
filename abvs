@@ -1,0 +1,42 @@
+#!/usr/bin/python
+
+import sys
+import subprocess
+
+def run_ab(url, extra_params):
+    cmd = 'ab %s %s' % (extra_params, url)
+    print cmd
+    ab_res = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE).communicate()[0]
+
+    res = []
+    for line in ab_res.split('\n'):
+        if 'Requests per second:' in line:
+            res.append(float(line.split(':')[1].split()[0]))
+            break
+    return res
+
+def versus(url1, url2,  extra_params):
+    res1 = run_ab(url1, extra_params)
+    res2 = run_ab(url2, extra_params)
+    return [(res1[i], res2[i], (res2[i] - res1[i]) * 100 / res1[i]) for i in range(len(res1))]
+
+COLOR = {
+    'green': '\033[1;32m%s\033[0m',
+    'red': '\033[1;31m%s\033[0m',
+}
+
+def color(text, color):
+    try:
+        return COLOR[color] % text
+    except KeyError, e:
+        return text
+
+try:
+    url1, url2 = sys.argv[1], sys.argv[2]
+    extra_ab_params = ' '.join(sys.argv[3:])
+    res = versus(url1, url2, extra_ab_params)[0]
+    url1 = color(url1, 'green' if res[2] < 0 else 'red')
+    url2 = color(url2, 'green' if res[2] > 0 else 'red')
+    print "%s (%d req/s) is %.2f%% %s than %s (%d req/s)" % (url1, res[0], abs(res[2]), 'faster' if res[2] < 0 else 'slower', url2, res[1])
+except IndexError, e:
+    print 'missing arguments'
