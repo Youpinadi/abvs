@@ -15,7 +15,7 @@ Options
 Sample usage
 -------
 
-    ./abvs http://www.google.com/ http://www.google.fr/
+    ./abvs -n 100 -c 10 http://www.google.com/ http://www.google.fr/
 
 Output:
     ab  http://www.google.com/
