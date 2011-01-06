@@ -49,10 +49,10 @@ try:
 
     extra_ab_params = ' '.join(sys.argv[1:-2])
     res = versus(url1, url2, extra_ab_params)[0]
-    url1 = color("%s (%d reqs/s)" % (url1, res[0]) , 'green' if res[2] > 1 else 'red')
-    url2 = color("%s (%d reqs/s)" % (url2, res[1]), 'green' if res[2] < 1 else 'red')
+    url1 = color("%s (%0.1f reqs/s)" % (url1, res[0]) , 'green' if res[2] > 1 else 'red')
+    url2 = color("%s (%0.1f reqs/s)" % (url2, res[1]), 'green' if res[2] < 1 else 'red')
     cmp = color("%.2fx times %s" % (abs(res[2]), 'faster' if res[2] > 1 else 'slower'), 'magenta')
-    
+
     print "%s is %s than %s" % (url1, cmp, url2)
 except IndexError, e:
     usage()
