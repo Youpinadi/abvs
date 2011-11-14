@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys
+import re
 import subprocess
 from urlparse import urlparse
 
@@ -9,17 +10,15 @@ def run_ab(url, extra_params):
     print cmd
     ab_res = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE).communicate()[0]
 
-    res = []
+    regex = re.compile('(\d+)$')
     for line in ab_res.split('\n'):
-        if 'Requests per second:' in line:
-            res.append(float(line.split(':')[1].split()[0]))
-            break
-    return res
+        if '50%' in line:
+            return int(regex.search(line).group(1))
 
 def versus(url1, url2,  extra_params):
     res1 = run_ab(url1, extra_params)
     res2 = run_ab(url2, extra_params)
-    return [(res1[i], res2[i], (res1[i] / res2[i])) for i in range(len(res1))]
+    return [res1, res2]
 
 COLOR = {
     'green': '\033[1;32m%s\033[0m',
@@ -48,10 +47,14 @@ try:
         usage()
 
     extra_ab_params = ' '.join(sys.argv[1:-2])
-    res = versus(url1, url2, extra_ab_params)[0]
-    url1 = color("%s (%0.1f reqs/s)" % (url1, res[0]) , 'green' if res[2] > 1 else 'red')
-    url2 = color("%s (%0.1f reqs/s)" % (url2, res[1]), 'green' if res[2] < 1 else 'red')
-    cmp = color("%.2fx times %s" % (abs(res[2]), 'faster' if res[2] > 1 else 'slower'), 'magenta')
+    res = versus(url1, url2, extra_ab_params)
+
+
+    result = abs(1- res[0]/float(res[1])) * 100
+
+    url1 = color("%s (%d ms)" % (url1, res[0]) , 'green' if res[0] < res[1] else 'red')
+    url2 = color("%s (%d ms)" % (url2, res[1]), 'green' if res[0] > res[1] else 'red')
+    cmp = color("%d%% %s" % (result, 'faster' if res[0] < res[1] else 'slower'), 'magenta')
 
     print "%s is %s than %s" % (url1, cmp, url2)
 except IndexError, e:
