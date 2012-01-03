@@ -3,10 +3,11 @@
 import sys
 import re
 import subprocess
+from optparse import OptionParser
 from urlparse import urlparse
 
-def run_ab(url, extra_params):
-    cmd = 'ab %s %s' % (extra_params, url)
+def run_ab(url, n, c):
+    cmd = 'ab -n%s -c%s %s' % (n, c,  url)
     print cmd
     ab_res = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE).communicate()[0]
 
@@ -15,9 +16,9 @@ def run_ab(url, extra_params):
         if '50%' in line:
             return int(regex.search(line).group(1))
 
-def versus(url1, url2,  extra_params):
-    res1 = run_ab(url1, extra_params)
-    res2 = run_ab(url2, extra_params)
+def versus(url1, url2,  n, c):
+    res1 = run_ab(url1, n, c)
+    res2 = run_ab(url2, n, c)
     return [res1, res2]
 
 COLOR = {
@@ -38,24 +39,33 @@ def usage():
     print'Example : abvs -n 100 -c 10 http://www.google.com/ http://www.google.fr/'
     sys.exit(1)
 
-try:
-    url1, url2 = sys.argv[-2], sys.argv[-1]
-    p1 = urlparse(url1)
-    p2 = urlparse(url2)
+def main():
+    parser = OptionParser()
+    parser.add_option('-n', '--number', dest="n",
+                  help="Number of iterations", type='int', default=100)
+    parser.add_option('-c', '--concurrency', dest="c",
+                  help="Concurrency", type='int', default=10)
+    (options, args) = parser.parse_args()
 
-    if p1.scheme == '' or p2.scheme == '' or p1.path[0] != '/' or p2.path[0] != '/':
+    try:
+        url1, url2 = sys.argv[-2], sys.argv[-1]
+        p1 = urlparse(url1)
+        p2 = urlparse(url2)
+
+        if p1.scheme == '' or p2.scheme == '' or p1.path[0] != '/' or p2.path[0] != '/':
+            usage()
+
+        res = versus(url1, url2, options.n, options.c)
+
+        result = abs(1- res[0]/float(res[1])) * 100
+
+        url1 = color("%s (%d ms)" % (url1, res[0]) , 'green' if res[0] < res[1] else 'red')
+        url2 = color("%s (%d ms)" % (url2, res[1]), 'green' if res[0] > res[1] else 'red')
+        cmp = color("%d%% %s" % (result, 'faster' if res[0] < res[1] else 'slower'), 'magenta')
+
+        print "%s is %s than %s" % (url1, cmp, url2)
+    except IndexError, e:
         usage()
 
-    extra_ab_params = ' '.join(sys.argv[1:-2])
-    res = versus(url1, url2, extra_ab_params)
-
-
-    result = abs(1- res[0]/float(res[1])) * 100
-
-    url1 = color("%s (%d ms)" % (url1, res[0]) , 'green' if res[0] < res[1] else 'red')
-    url2 = color("%s (%d ms)" % (url2, res[1]), 'green' if res[0] > res[1] else 'red')
-    cmp = color("%d%% %s" % (result, 'faster' if res[0] < res[1] else 'slower'), 'magenta')
-
-    print "%s is %s than %s" % (url1, cmp, url2)
-except IndexError, e:
-    usage()
+if __name__ == '__main__':
+    main()
