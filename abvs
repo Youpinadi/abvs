@@ -48,7 +48,7 @@ def main():
     (options, args) = parser.parse_args()
 
     try:
-        url1, url2 = sys.argv[-2], sys.argv[-1]
+        url1, url2 = args
         p1 = urlparse(url1)
         p2 = urlparse(url2)
 
